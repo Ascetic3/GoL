@@ -9,7 +9,7 @@ import (
 
 type array2D [][]int
 
-func NewGameOfLife(filename string) array2D {
+func newGameOfLife(filename string) array2D {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Println("error чтения файла", err)
@@ -32,7 +32,7 @@ func NewGameOfLife(filename string) array2D {
 	return grid
 }
 
-func Save(grid array2D, filename string) {
+func save(grid array2D, filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
 		fmt.Printf("Ошибка создания файла: %v\n", err)
@@ -46,10 +46,7 @@ func Save(grid array2D, filename string) {
 
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			if j > 0 {
-				fmt.Fprint(file, " ")
-			}
-			fmt.Fprintf(file, "%d", grid[i][j])
+			fmt.Fprintf(file, "%d ", grid[i][j])
 		}
 		fmt.Fprintln(file)
 	}
@@ -79,9 +76,8 @@ func simulateDay(grid array2D) array2D {
 				// Мертвая клетка
 				if neighbors == 3 {
 					newGrid[i][j] = 1 // Оживает
-				} else {
-					newGrid[i][j] = 0 // Остается мертвой
 				}
+				// Иначе остается мертвой (уже 0 по умолчанию)
 			}
 		}
 	}
@@ -123,9 +119,8 @@ func pbc(x, l int) int {
 
 // СТАРАЯ ВЕРСИЯ: только одна итерация
 func main() {
-	filename := "state_after_1_day.txt"
-	grid := NewGameOfLife("state.txt")
+	grid := newGameOfLife("state.txt")
 	grid = simulateDay(grid)
-	Save(grid, filename)
-	fmt.Println("Результат сохранен в state_after_1_day.txt")
+	save(grid, "state.txt")
+	fmt.Println("Результат сохранен в state.txt")
 }

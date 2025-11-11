@@ -11,7 +11,7 @@ import (
 
 type array2D [][]int
 
-func NewGameOfLife(filename string) array2D {
+func newGameOfLife(filename string) array2D {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		fmt.Println("error чтения файла", err)
@@ -34,7 +34,7 @@ func NewGameOfLife(filename string) array2D {
 	return grid
 }
 
-func Save(grid array2D, filename string) {
+func save(grid array2D, filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
 		fmt.Printf("Ошибка создания файла: %v\n", err)
@@ -48,10 +48,7 @@ func Save(grid array2D, filename string) {
 
 	for i := 0; i < size; i++ {
 		for j := 0; j < size; j++ {
-			if j > 0 {
-				fmt.Fprint(file, " ")
-			}
-			fmt.Fprintf(file, "%d", grid[i][j])
+			fmt.Fprintf(file, "%d ", grid[i][j])
 		}
 		fmt.Fprintln(file)
 	}
@@ -81,9 +78,8 @@ func simulateDay(grid array2D) array2D {
 				// Мертвая клетка
 				if neighbors == 3 {
 					newGrid[i][j] = 1 // Оживает
-				} else {
-					newGrid[i][j] = 0 // Остается мертвой
 				}
+				// Иначе остается мертвой (уже 0 по умолчанию)
 			}
 		}
 	}
@@ -125,11 +121,25 @@ func pbc(x, l int) int {
 
 // НОВАЯ ВЕРСИЯ: несколько итераций с анимацией
 func main() {
-	// Количество итераций для симуляции
+	// Количество итераций по умолчанию
 	iterations := 20
+	patternFile := "state.txt"
+	// Если указан аргумент командной строки, используем его
+	if len(os.Args) > 1 {
+		if num, err := strconv.Atoi(os.Args[1]); err == nil && num > 0 {
+			iterations = num
+		} else {
+			fmt.Println("Ошибка: количество итераций должно быть положительным числом")
+			fmt.Println("Использование: go run template.go [количество_итераций]")
+			fmt.Printf("Используется значение по умолчанию: %d\n", iterations)
+		}
+		if len(os.Args) > 2 {
+			patternFile = "patterns/" + os.Args[2] + ".txt"
+		}
+	}
 
 	// Загружаем начальное состояние
-	grid := NewGameOfLife("state.txt")
+	grid := newGameOfLife(patternFile)
 
 	// Папка для сохранения состояний
 	statesDir := "states"
@@ -139,14 +149,14 @@ func main() {
 	}
 
 	// Сохраняем начальное состояние
-	Save(grid, filepath.Join(statesDir, "state_0.txt"))
+	save(grid, filepath.Join(statesDir, "state_0.txt"))
 	fmt.Println("Состояние 0 сохранено")
 
 	// Выполняем итерации
 	for i := 1; i <= iterations; i++ {
 		grid = simulateDay(grid)
 		filename := fmt.Sprintf("state_%d.txt", i)
-		Save(grid, filepath.Join(statesDir, filename))
+		save(grid, filepath.Join(statesDir, filename))
 		fmt.Printf("Итерация %d сохранена\n", i)
 		time.Sleep(300 * time.Millisecond) // задержка между итерациями
 	}
